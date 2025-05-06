@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XML to JSON Converter</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #22a8e2;
+        --success-color: #2ecc71;
+        --error-color: #e74c3c;
+        --text-color: #2c3e50;
+        --bg-color: #f5f5f5;
+        --card-bg: white;
+        --border-radius: 8px;
+        --transition: all 0.3s ease;
+      }
+
+      [data-theme="dark"] {
+        --primary-color: #3498db;
+        --success-color: #27ae60;
+        --error-color: #c0392b;
+        --text-color: #ecf0f1;
+        --bg-color: #2c3e50;
+        --card-bg: #34495e;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: var(--transition);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+      }
+
+      h1 {
+        color: var(--text-color);
+        margin: 0;
+      }
+
+      .theme-toggle {
+        background: none;
+        border: none;
+        color: var(--text-color);
+        cursor: pointer;
+        font-size: 24px;
+      }
+
+      .upload-container {
+        background: var(--card-bg);
+        padding: 30px;
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: var(--transition);
+      }
+
+      .drop-zone {
+        border: 2px dashed var(--primary-color);
+        border-radius: var(--border-radius);
+        padding: 40px;
+        margin-bottom: 20px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .drop-zone.dragover {
+        background-color: rgba(34, 168, 226, 0.1);
+        border-color: var(--success-color);
+      }
+
+      .file-input-wrapper {
+        position: relative;
+        margin-bottom: 20px;
+      }
+
+      .file-input-label {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .file-input-label:hover {
+        opacity: 0.9;
+      }
+
+      #fileInput {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+      }
+
+      #fileName {
+        display: block;
+        margin-top: 10px;
+        color: var(--text-color);
+      }
+
+      .file-info {
+        margin-top: 10px;
+        font-size: 0.9em;
+      }
+
+      .file-size {
+        color: var(--primary-color);
+      }
+
+      .file-type {
+        color: var(--success-color);
+      }
+
+      .error-message {
+        color: var(--error-color);
+        margin-top: 10px;
+        display: none;
+      }
+
+      #submitBtn {
+        padding: 12px 24px;
+        background-color: var(--success-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 16px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      #submitBtn:hover {
+        opacity: 0.9;
+      }
+
+      #submitBtn:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+      }
+
+      .loading {
+        display: none;
+        margin: 20px auto;
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      #result {
+        margin-top: 30px;
+        padding: 20px;
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        display: none;
+        transition: var(--transition);
+      }
+
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .action-button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: var(--transition);
+        color: white;
+      }
+
+      .copy-btn {
+        background-color: var(--primary-color);
+      }
+
+      .download-btn {
+        background-color: var(--success-color);
+      }
+
+      .countdown {
+        color: var(--error-color);
+      }
+
+      pre {
+        background: #1e1e1e;
+        padding: 15px;
+        border-radius: var(--border-radius);
+        overflow-x: auto;
+        margin: 0;
+      }
+
+      .paste-area {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        background: var(--card-bg);
+      }
+
+      .paste-area textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        resize: vertical;
+        font-family: monospace;
+      }
+
+      .paste-area button {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        background: var(--success-color);
+        color: white;
+        border-radius: var(--border-radius);
+        display: none;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+
+      .batch-files {
+        margin-top: 20px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .file-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        margin: 5px 0;
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--primary-color);
+      }
+
+      .file-item .remove-file {
+        color: var(--error-color);
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: var(--border-radius);
+        background: rgba(231, 76, 60, 0.1);
+      }
+
+      .file-item .file-status {
+        font-size: 0.9em;
+        margin-left: 10px;
+      }
+
+      .file-item .file-status.success {
+        color: var(--success-color);
+      }
+
+      .file-item .file-status.error {
+        color: var(--error-color);
+      }
+
+      .batch-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 4px;
+        background: #eee;
+        border-radius: 2px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+
+      .progress-bar .progress {
+        height: 100%;
+        background: var(--primary-color);
+        width: 0;
+        transition: width 0.3s ease;
+      }
+
+      .advanced-features {
+        margin-top: 30px;
+        padding: 24px 20px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1.5px solid #d1e3f8;
+        box-shadow: 0 2px 8px rgba(34, 168, 226, 0.07);
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .advanced-features h3 {
+        margin-top: 0;
+        margin-bottom: 18px;
+        color: #223a4e;
+        font-size: 1.3rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-align: left;
+      }
+
+      .feature-buttons {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-top: 0;
+      }
+
+      .action-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 22px;
+        font-size: 1rem;
+        font-weight: 500;
+        border: none;
+        border-radius: 8px;
+        background: #22a8e2;
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s;
+        box-shadow: 0 1px 4px rgba(34, 168, 226, 0.08);
+      }
+
+      .action-button:disabled {
+        background: #e3e8ee;
+        color: #b0b8c1;
+        cursor: not-allowed;
+        opacity: 1;
+        border: 1px dashed #cfd8dc;
+      }
+
+      .action-button svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      }
+
+      .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--card-bg);
+        padding: 20px;
+        border-radius: var(--border-radius);
+        min-width: 300px;
+      }
+
+      .modal-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        justify-content: flex-end;
+      }
+
+      .modal input[type="password"] {
+        width: 100%;
+        padding: 8px;
+        margin: 10px 0;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>XML to JSON Converter</h1>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+
+    <div class="upload-container">
+      <div class="drop-zone" id="dropZone">
+        <div class="file-input-wrapper">
+          <label class="file-input-label" for="fileInput">
+            Choose XML File(s) or Drag & Drop
+          </label>
+          <input
+            id="fileInput"
+            type="file"
+            name="xmlFile"
+            accept=".xml"
+            multiple
+            required
+          />
+        </div>
+        <div id="fileName">No files selected</div>
+        <div class="file-info">
+          <span class="file-size">Maximum file size: 5MB per file</span>
+          <span class="file-type">Supported format: XML</span>
+        </div>
+        <div class="error-message" id="errorMessage"></div>
+        <div class="batch-files" id="batchFiles"></div>
+        <div class="progress-bar">
+          <div class="progress" id="progressBar"></div>
+        </div>
+        <div class="batch-actions">
+          <button id="clearFilesBtn" class="action-button" style="background-color: var(--error-color);">Clear All</button>
+          <button id="convertAllBtn" class="action-button" style="background-color: var(--primary-color);">Convert All</button>
+        </div>
+      </div>
+
+      <div class="paste-area">
+        <h3>Or paste XML directly:</h3>
+        <textarea id="xmlInput" placeholder="Paste your XML here..."></textarea>
+        <button id="pasteSubmitBtn">Convert Pasted XML</button>
+      </div>
+
+      <div class="advanced-features">
+        <h3>Advanced Features</h3>
+        <div class="feature-buttons">
+          <button id="formatXmlBtn" class="action-button" title="Format the XML in the textarea">
+            <svg viewBox="0 0 20 20"><path d="M3 4h14v2H3V4zm0 4h14v2H3V8zm0 4h9v2H3v-2z"/></svg>
+            <span>Format XML</span>
+          </button>
+          <button id="validateXmlBtn" class="action-button" title="Validate the XML in the textarea">
+            <svg viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-4l5-5-1.41-1.41L9 11.17l-1.59-1.59L6 11l3 3z"/></svg>
+            <span>Validate XML</span>
+          </button>
+          <button id="compressBtn" class="action-button" title="Compress selected files">
+            <svg viewBox="0 0 20 20"><path d="M5 8h10v2H5V8zm0 4h10v2H5v-2zm2-8h6v2H7V4zm-2 8h2v2H5v-2zm10 0h2v2h-2v-2z"/></svg>
+            <span>Compress</span>
+          </button>
+          <button id="encryptBtn" class="action-button" title="Encrypt selected files">
+            <svg viewBox="0 0 20 20"><path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v8a2 2 0 002 2h10a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm-2 6V6a2 2 0 114 0v2H8zm-3 2h10v8H5v-8z"/></svg>
+            <span>Encrypt</span>
+          </button>
+          <button id="decryptBtn" class="action-button" title="Decrypt an encrypted file">
+            <svg viewBox="0 0 20 20"><path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v8a2 2 0 002 2h10a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm-2 6V6a2 2 0 114 0v2H8zm-3 2h10v8H5v-8z"/></svg>
+            <span>Decrypt</span>
+          </button>
+        </div>
+
+        <!-- Encryption Modal -->
+        <div id="encryptModal" class="modal">
+          <div class="modal-content">
+            <h3>File Encryption</h3>
+            <input type="password" id="encryptPassword" placeholder="Enter encryption password">
+            <div class="modal-buttons">
+              <button id="confirmEncrypt">Encrypt</button>
+              <button id="cancelEncrypt">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decryption Modal -->
+        <div id="decryptModal" class="modal">
+          <div class="modal-content">
+            <h3>File Decryption</h3>
+            <input type="password" id="decryptPassword" placeholder="Enter decryption password">
+            <div class="modal-buttons">
+              <button id="confirmDecrypt">Decrypt</button>
+              <button id="cancelDecrypt">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="file" id="decryptFileInput" style="display:none" accept=".encrypted,.bin,.dat,.txt" />
+
+      <button id="submitBtn" type="submit" disabled>Convert to JSON</button>
+      <div class="loading" id="loading"></div>
+    </div>
+
+    <div id="result">
+      <div class="result-header">
+        <h3>Conversion Result</h3>
+        <div class="action-buttons">
+          <button class="action-button copy-btn" onclick="copyToClipboard()">
+            Copy JSON
+          </button>
+          <a href="#" class="action-button download-btn" id="downloadLink"
+            >Download JSON</a
+          >
+        </div>
+      </div>
+      <p>Link expires in: <span class="countdown" id="countdown">5:00</span></p>
+      <h4>Preview:</h4>
+      <pre><code class="language-json" id="jsonPreview"></code></pre>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="/js/advanced-features.js"></script>
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const fileName = document.getElementById("fileName");
+      const submitBtn = document.getElementById("submitBtn");
+      const resultDiv = document.getElementById("result");
+      const loading = document.getElementById("loading");
+      const dropZone = document.getElementById("dropZone");
+      const errorMessage = document.getElementById("errorMessage");
+      const xmlInput = document.getElementById("xmlInput");
+      const pasteSubmitBtn = document.getElementById("pasteSubmitBtn");
+      const toast = document.getElementById("toast");
+      const formData = new FormData();
+      const batchFiles = document.getElementById('batchFiles');
+      const clearFilesBtn = document.getElementById('clearFilesBtn');
+      const convertAllBtn = document.getElementById('convertAllBtn');
+      const progressBar = document.getElementById('progressBar');
+      let selectedFiles = new Map();
+      let fileToDecrypt = null;
+
+      // Theme toggle
+      function toggleTheme() {
+        document.body.setAttribute(
+          "data-theme",
+          document.body.getAttribute("data-theme") === "dark" ? "light" : "dark"
+        );
+        document.querySelector(".theme-toggle").textContent =
+          document.body.getAttribute("data-theme") === "dark" ? "☀️" : "🌙";
+      }
+
+      // Show toast message
+      function showToast(message) {
+        toast.textContent = message;
+        toast.style.display = "block";
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 3000);
+      }
+
+      // Copy to clipboard
+      function copyToClipboard() {
+        const jsonPreview = document.getElementById("jsonPreview").textContent;
+        navigator.clipboard.writeText(jsonPreview).then(() => {
+          showToast("JSON copied to clipboard!");
+        });
+      }
+
+      // Drag and drop handlers
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight(e) {
+        dropZone.classList.add("dragover");
+      }
+
+      function unhighlight(e) {
+        dropZone.classList.remove("dragover");
+      }
+
+      dropZone.addEventListener("drop", handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+      }
+
+      function handleFiles(files) {
+        if (files.length === 0) return;
+
+        for (const file of files) {
+          handleFile(file);
+        }
+      }
+
+      function handleFile(file) {
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+          errorMessage.textContent = "File size exceeds 5MB limit";
+          errorMessage.style.display = "block";
+          submitBtn.disabled = true;
+          return;
+        }
+
+        if (!file.name.endsWith(".xml")) {
+          errorMessage.textContent = "Please upload an XML file";
+          errorMessage.style.display = "block";
+          submitBtn.disabled = true;
+          return;
+        }
+
+        errorMessage.style.display = "none";
+        fileName.textContent = `${file.name} (${(file.size / 1024).toFixed(
+          2
+        )} KB)`;
+        submitBtn.disabled = false;
+        selectedFiles.set(selectedFiles.size, file);
+        updateFileList();
+      }
+
+      fileInput.addEventListener("change", function (e) {
+        if (e.target.files.length > 0) {
+          handleFiles(e.target.files);
+        } else {
+          fileName.textContent = "No files selected";
+          submitBtn.disabled = true;
+        }
+      });
+
+      async function convertXML(xmlContent) {
+        loading.style.display = "block";
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Processing...";
+
+        try {
+          const response = await fetch("/api/upload", {
+            method: "POST",
+            body: xmlContent instanceof FormData ? xmlContent : new FormData(),
+          });
+
+          if (!response.ok) throw new Error("Conversion failed");
+
+          const result = await response.json();
+
+          // Immediately download the JSON as a file
+          const jsonBlob = new Blob([
+            JSON.stringify(result.jsonPreview, null, 2)
+          ], { type: "application/json" });
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(jsonBlob);
+          downloadLink.download = "converted.json";
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+
+          // (Optional) Still show the preview and download link if you want
+          resultDiv.style.display = "block";
+          document.getElementById("jsonPreview").textContent = JSON.stringify(
+            result.jsonPreview,
+            null,
+            2
+          );
+          document.getElementById("downloadLink").href = result.downloadUrl;
+
+          Prism.highlightElement(document.getElementById("jsonPreview"));
+
+          let timeLeft = 300;
+          const timer = setInterval(() => {
+            timeLeft--;
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            document.getElementById("countdown").textContent = `${mins}:$${
+              secs < 10 ? "0" : ""
+            }${secs}`;
+
+            if (timeLeft <= 0) {
+              clearInterval(timer);
+              const link = document.getElementById("downloadLink");
+              link.classList.add("expired");
+              link.textContent = "Link expired!";
+              link.removeAttribute("href");
+            }
+          }, 1000);
+        } catch (err) {
+          showToast("Error: " + err.message);
+        } finally {
+          loading.style.display = "none";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Convert to JSON";
+        }
+      }
+
+      submitBtn.addEventListener("click", async () => {
+        if (selectedFiles.size > 0) {
+          convertAllBtn.disabled = true;
+          let completed = 0;
+
+          for (const [index, file] of selectedFiles) {
+            try {
+              const formData = new FormData();
+              formData.set("xmlFile", file);
+              await convertXML(formData);
+              selectedFiles.delete(index);
+              completed++;
+            } catch (err) {
+              console.error(`Error converting ${file.name}:`, err);
+            }
+            updateProgress((completed / selectedFiles.size) * 100);
+            updateFileList();
+          }
+
+          showToast(`Converted ${completed} of ${selectedFiles.size} files`);
+          convertAllBtn.disabled = false;
+        }
+      });
+
+      pasteSubmitBtn.addEventListener("click", () => {
+        const xmlContent = xmlInput.value.trim();
+        if (!xmlContent) {
+          showToast("Please enter XML content");
+          return;
+        }
+
+        const blob = new Blob([xmlContent], { type: "text/xml" });
+        const file = new File([blob], "pasted.xml", { type: "text/xml" });
+        selectedFiles.set(selectedFiles.size, file);
+        updateFileList();
+        submitBtn.disabled = false;
+      });
+
+      function updateFileList() {
+        batchFiles.innerHTML = '';
+        selectedFiles.forEach((file, index) => {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'file-item';
+          fileItem.innerHTML = `
+            <span>${file.name} (${(file.size / 1024).toFixed(2)} KB)</span>
+            <div>
+              <span class="file-status ${file.status || ''}">${file.status || 'Pending'}</span>
+              <span class="remove-file" onclick="removeFile(${index})">×</span>
+            </div>
+          `;
+          batchFiles.appendChild(fileItem);
+        });
+        updateButtons();
+      }
+
+      function removeFile(index) {
+        selectedFiles.delete(index);
+        updateFileList();
+      }
+
+      function updateButtons() {
+        clearFilesBtn.disabled = selectedFiles.size === 0;
+        convertAllBtn.disabled = selectedFiles.size === 0;
+      }
+
+      function updateProgress(progress) {
+        progressBar.style.width = `${progress}%`;
+      }
+
+      clearFilesBtn.addEventListener('click', () => {
+        selectedFiles.clear();
+        updateFileList();
+        fileName.textContent = 'No files selected';
+        submitBtn.disabled = true;
+      });
+
+      convertAllBtn.addEventListener('click', async () => {
+        if (selectedFiles.size === 0) return;
+
+        convertAllBtn.disabled = true;
+        let completed = 0;
+
+        for (const [index, file] of selectedFiles) {
+          try {
+            const formData = new FormData();
+            formData.set('xmlFile', file);
+            await convertXML(formData);
+            selectedFiles.delete(index);
+            completed++;
+          } catch (err) {
+            console.error(`Error converting ${file.name}:`, err);
+          }
+          updateProgress((completed / selectedFiles.size) * 100);
+          updateFileList();
+        }
+
+        showToast(`Converted ${completed} of ${selectedFiles.size} files`);
+        convertAllBtn.disabled = false;
+      });
+
+      // Advanced Features Integration
+      const formatXmlBtn = document.getElementById('formatXmlBtn');
+      const validateXmlBtn = document.getElementById('validateXmlBtn');
+      const compressBtn = document.getElementById('compressBtn');
+      const encryptBtn = document.getElementById('encryptBtn');
+      const decryptBtn = document.getElementById('decryptBtn');
+      const encryptModal = document.getElementById('encryptModal');
+      const decryptModal = document.getElementById('decryptModal');
+      const decryptFileInput = document.getElementById('decryptFileInput');
+
+      // Helper: Enable/disable advanced feature buttons based on context
+      function updateAdvancedFeatureButtons() {
+        const xmlContent = xmlInput.value.trim();
+        const hasXML = !!xmlContent;
+        const hasFiles = selectedFiles && selectedFiles.size > 0;
+        formatXmlBtn.disabled = !hasXML;
+        validateXmlBtn.disabled = !hasXML;
+        compressBtn.disabled = !hasFiles;
+        encryptBtn.disabled = !hasFiles;
+        decryptBtn.disabled = !hasFiles;
+      }
+
+      xmlInput.addEventListener('input', updateAdvancedFeatureButtons);
+      fileInput.addEventListener('change', updateAdvancedFeatureButtons);
+
+      // For drag & drop
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, updateAdvancedFeatureButtons, false);
+      });
+
+      // If a disabled button is clicked, guide the user
+      function handleDisabledButton(e, type) {
+        e.preventDefault();
+        if (type === 'xml') {
+          xmlInput.focus();
+          showToast('Please enter XML content in the textarea above.');
+        } else if (type === 'file') {
+          fileInput.click();
+          showToast('Please select files using the file picker.');
+        }
+      }
+
+      formatXmlBtn.addEventListener('click', function(e) {
+        if (formatXmlBtn.disabled) {
+          handleDisabledButton(e, 'xml');
+          return;
+        }
+        // ... existing Format XML logic ...
+      });
+
+      validateXmlBtn.addEventListener('click', function(e) {
+        if (validateXmlBtn.disabled) {
+          handleDisabledButton(e, 'xml');
+          return;
+        }
+        const xmlContent = xmlInput.value.trim();
+        if (!xmlContent) {
+          showToast('Please enter XML content first');
+          return;
+        }
+        const result = window.advancedFeatures.validateXML(xmlContent);
+        if (result.valid) {
+          showToast('XML is valid');
+        } else {
+          showToast('Invalid XML: ' + (result.message || 'Unknown error'));
+        }
+      });
+
+      compressBtn.addEventListener('click', function(e) {
+        if (compressBtn.disabled) {
+          handleDisabledButton(e, 'file');
+          return;
+        }
+        // ... existing Compress logic ...
+      });
+
+      encryptBtn.addEventListener('click', function(e) {
+        if (encryptBtn.disabled) {
+          handleDisabledButton(e, 'file');
+          return;
+        }
+        // ... existing Encrypt logic ...
+      });
+
+      decryptBtn.addEventListener('click', () => {
+        decryptFileInput.value = '';
+        decryptFileInput.click();
+      });
+
+      decryptFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          fileToDecrypt = e.target.files[0];
+          decryptModal.style.display = 'block';
+        }
+      });
+
+      document.getElementById('confirmDecrypt').addEventListener('click', async () => {
+        const password = document.getElementById('decryptPassword').value;
+        if (!fileToDecrypt || !password) {
+          showToast('Please select a file and enter a password');
+          return;
+        }
+        try {
+          const decryptedBlob = await window.advancedFeatures.decryptFile(fileToDecrypt, password);
+          const text = await decryptedBlob.text();
+          if (text === 'Wrong password or file is corrupted!') {
+            showToast(text);
+          } else {
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(decryptedBlob);
+            downloadLink.download = fileToDecrypt.name.replace(/\.encrypted$/, '').replace(/\.(bin|dat|txt)$/, '') || 'decrypted.xml';
+            downloadLink.click();
+            showToast('File decrypted successfully!');
+          }
+        } catch (err) {
+          showToast('Decryption failed.');
+        } finally {
+          decryptModal.style.display = 'none';
+          document.getElementById('decryptPassword').value = '';
+          fileToDecrypt = null;
+        }
+      });
+
+      document.getElementById('cancelDecrypt').addEventListener('click', () => {
+        decryptModal.style.display = 'none';
+        document.getElementById('decryptPassword').value = '';
+        fileToDecrypt = null;
+      });
+
+      // Initial state
+      updateAdvancedFeatureButtons();
+
+      // Format XML
+      formatXmlBtn.addEventListener('click', async () => {
+        const xmlContent = xmlInput.value.trim();
+        if (!xmlContent) {
+          showToast('Please enter XML content first');
+          return;
+        }
+
+        try {
+          const formatted = window.advancedFeatures.formatXML(xmlContent);
+          xmlInput.value = formatted;
+          showToast('XML formatted successfully');
+        } catch (err) {
+          showToast('Error formatting XML: ' + err.message);
+        }
+      });
+
+      // Compress Files
+      compressBtn.addEventListener('click', async () => {
+        if (selectedFiles.size === 0) {
+          showToast('Please select files to compress');
+          return;
+        }
+
+        try {
+          const zip = new JSZip();
+          for (const [_, file] of selectedFiles) {
+            zip.file(file.name, file);
+          }
+
+          const compressed = await zip.generateAsync({type: "blob"});
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(compressed);
+          downloadLink.download = 'compressed_files.zip';
+          downloadLink.click();
+          showToast('Files compressed successfully');
+        } catch (err) {
+          showToast('Error compressing files: ' + err.message);
+        }
+      });
+
+      // Encryption
+      encryptBtn.addEventListener('click', () => {
+        if (selectedFiles.size === 0) {
+          showToast('Please select files to encrypt');
+          return;
+        }
+        encryptModal.style.display = 'block';
+      });
+
+      document.getElementById('confirmEncrypt').addEventListener('click', async () => {
+        const password = document.getElementById('encryptPassword').value;
+        if (!password) {
+          showToast('Please enter a password');
+          return;
+        }
+
+        try {
+          for (const [index, file] of selectedFiles) {
+            const encrypted = await window.advancedFeatures.encryptFile(file, password);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(encrypted);
+            downloadLink.download = file.name + '.encrypted';
+            downloadLink.click();
+          }
+          showToast('Files encrypted successfully');
+          encryptModal.style.display = 'none';
+          document.getElementById('encryptPassword').value = '';
+        } catch (err) {
+          showToast('Error encrypting files: ' + err.message);
+        }
+      });
+
+      document.getElementById('cancelEncrypt').addEventListener('click', () => {
+        encryptModal.style.display = 'none';
+        document.getElementById('encryptPassword').value = '';
+      });
+
+      // Close modals when clicking outside
+      window.addEventListener('click', (e) => {
+        if (e.target === encryptModal) {
+          encryptModal.style.display = 'none';
+        }
+        if (e.target === decryptModal) {
+          decryptModal.style.display = 'none';
+        }
+      });
+    </script>
+  </body>
+</html>
